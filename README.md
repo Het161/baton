@@ -356,10 +356,13 @@ Lighthouse, mobile preset, against `next start` (medians of three runs):
   The canvas fades in _behind_ text that has already painted.
 - **GSAP, Lenis, Three/R3F and WebLLM all load after paint.** GSAP is only ever needed inside an
   effect, so importing it lazily keeps ~46 KB off the critical path.
-- **The WebGL scene arms on the visitor's first sign of presence** — scroll, pointer move, key,
-  tap. Building it is one long main-thread task; doing that during hydration cost **4,000ms of
-  TBT and a Lighthouse score of 62**. It buys nothing, because the 3D exists to tell a _scroll_
-  story, and until someone scrolls the static composition is the design.
+- **The WebGL scene never builds during hydration.** Doing so cost **4,000ms of TBT and a
+  Lighthouse score of 62** — it is one long main-thread task (geometry, six shader programs, a
+  first frame). After the critical window the device decides: a capable machine arms as soon as
+  the browser goes idle, so the baton is moving within about a second without anyone touching
+  anything; a constrained one waits for a real signal of intent (scroll, pointer, tap), because
+  there the build is a multi-second stall and the static composition is a good hero on its own.
+  Either way the first interaction arms it immediately.
 
 ### Fallbacks, all verified
 

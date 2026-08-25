@@ -19,25 +19,51 @@ export function Stage() {
   const [armed, setArmed] = useState(false);
 
   /**
-   * The scene arms on the visitor's first sign of presence — a scroll, a
-   * pointer moving over the page, a key, a tap.
+   * When the scene is allowed to build.
    *
-   * Building it is one long main-thread task: geometry, six shader programs
-   * and a first frame. Running that during hydration is what makes a page feel
-   * dead on a mid-range phone, and it buys nothing: the 3D exists to tell a
-   * *scroll* story, and until someone scrolls the static composition is the
-   * design. In practice a real visitor arms it within a second of arriving; a
-   * visitor who never touches the page never pays for it.
+   * Building it is one long main-thread task — geometry, six shader programs,
+   * a first frame. Doing that during hydration costs seconds of blocking on a
+   * weak device, so it never runs inside the critical window. After that the
+   * device decides:
+   *
+   * - A capable machine arms as soon as the browser goes idle, so the baton is
+   *   moving before anyone touches anything. The 3D is the pitch; a visitor
+   *   who sits still for a moment should still see it.
+   * - A constrained one waits for a real signal of intent — a scroll, a
+   *   pointer, a tap — because there the build is a multi-second stall and the
+   *   static composition is a genuinely good hero on its own.
+   *
+   * Either way the first interaction arms it immediately.
    */
   useEffect(() => {
-    if (armed) return;
+    if (armed || !ready) return;
     const arm = () => setArmed(true);
+
     const events = ["scroll", "pointerdown", "pointermove", "keydown", "touchstart"] as const;
     for (const type of events) window.addEventListener(type, arm, { passive: true, once: true });
+
+    let idle = 0;
+    let timer = 0;
+    const eager = quality === "high";
+
+    const schedule = () => {
+      const ric = window.requestIdleCallback;
+      if (ric) idle = ric(arm, { timeout: 1200 });
+      else timer = window.setTimeout(arm, 1200);
+    };
+
+    if (eager) {
+      if (document.readyState === "complete") schedule();
+      else window.addEventListener("load", schedule, { once: true });
+    }
+
     return () => {
       for (const type of events) window.removeEventListener(type, arm);
+      window.removeEventListener("load", schedule);
+      if (idle) window.cancelIdleCallback?.(idle);
+      if (timer) window.clearTimeout(timer);
     };
-  }, [armed]);
+  }, [armed, ready, quality]);
 
   // pointer parallax source — fine pointers only
   useEffect(() => {
