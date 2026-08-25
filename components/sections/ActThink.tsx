@@ -126,8 +126,9 @@ export function ActThink() {
               <p className="mt-3 max-w-[46ch] text-body">
                 On-device AI is limited by heat, not by intelligence — sustained inference throttles
                 a phone within minutes. So BATON never runs sustained. It thinks in short bursts and
-                cools between them, which is exactly what the iQOO 15&apos;s ~60 TOPS NPU and vapor
-                chamber are built for.
+                cools between them. That is exactly what the iQOO 15 is built for: a Snapdragon 8
+                Elite Gen 5 Hexagon NPU to finish the burst fast, and a 14,000 mm² vapor chamber to
+                absorb it.
               </p>
             </div>
           </div>

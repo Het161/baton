@@ -116,12 +116,12 @@ payload is code.
 
 ### What it actually looks like
 
-| | |
-| --- | --- |
-| ![Hero](docs/hero.jpg) | ![ACT I — capture](docs/act1.jpg) |
-| **Hero** — the baton is born, dark glass over an ember core, pointer parallax on the camera. | **ACT I · CAPTURE** — capture chips scatter, then collapse into the baton. |
-| ![ACT II — think](docs/act2.jpg) | ![ACT III — handoff](docs/act3.jpg) |
-| **ACT II · THINK** — the core ripples while the on-device readout types itself out. | **ACT III · HANDOFF** — the trail draws from phone to desk and the page cools to porcelain. |
+|                                                                                              |                                                                                             |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| ![Hero](docs/hero.jpg)                                                                       | ![ACT I — capture](docs/act1.jpg)                                                           |
+| **Hero** — the baton is born, dark glass over an ember core, pointer parallax on the camera. | **ACT I · CAPTURE** — capture chips scatter, then collapse into the baton.                  |
+| ![ACT II — think](docs/act2.jpg)                                                             | ![ACT III — handoff](docs/act3.jpg)                                                         |
+| **ACT II · THINK** — the core ripples while the on-device readout types itself out.          | **ACT III · HANDOFF** — the trail draws from phone to desk and the page cools to porcelain. |
 
 ### Scene graph
 
@@ -419,8 +419,11 @@ Lighthouse, mobile preset, against `next start` (medians of three runs):
   around_ the flow: it produces a file plus a block of text, which is exactly what clipboard sync
   and file drop already carry between an OriginOS 6 phone and a desk.
 - **Thermals** — on-device AI's real constraint is heat. BATON runs in short bursts and cools
-  between them, the workload the iQOO 15's NPU and vapor chamber are built for. Stated as a
-  constraint we designed around, not a feature.
+  between them, the workload the iQOO 15 is built for: a Snapdragon 8 Elite Gen 5 Hexagon NPU
+  (Qualcomm quote 37% faster at AI than the previous generation) and a 14,000 mm² vapor chamber,
+  the largest iQOO has shipped. Stated as a constraint we designed around, not a feature.
+  We deliberately quote no NPU TOPS figure: Qualcomm does not publish one for this part, and the
+  third-party numbers in circulation disagree with each other.
 - **The browser demo** runs WebLLM over WebGPU because that is the runtime a browser has. Same
   thesis, different runtime — not a claim that the phone build uses WebLLM.
 - **Zero cloud.** No AI request leaves the device anywhere in this codebase. The only network
