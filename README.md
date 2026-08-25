@@ -4,6 +4,12 @@
 
 Pitch site and working prototype for the **iQOO Hackathon 2026 — City Battle 03, Chennai**.
 
+![The scroll journey: one baton travels from the phone world to the desk world while the palette cools](docs/scroll-journey.gif)
+
+> **This is a recording of the running site.** GitHub renders markdown, so it cannot run WebGL —
+> the animation above is captured, not live. To see the real thing, `npm run dev` and open
+> `localhost:3000`. Higher-quality capture: [docs/scroll-journey.mp4](docs/scroll-journey.mp4).
+
 | Route   | What it is                                                                                   |
 | ------- | -------------------------------------------------------------------------------------------- |
 | `/`     | The pitch. A scroll-driven, WebGL, three-act story: **capture → think → handoff**.           |
@@ -107,6 +113,15 @@ and unmounted, so there is no context churn and no shader recompile mid-story.
 
 **All geometry is procedural.** No downloaded GLB, no HDR, no texture files — the entire 3D
 payload is code.
+
+### What it actually looks like
+
+| | |
+| --- | --- |
+| ![Hero](docs/hero.jpg) | ![ACT I — capture](docs/act1.jpg) |
+| **Hero** — the baton is born, dark glass over an ember core, pointer parallax on the camera. | **ACT I · CAPTURE** — capture chips scatter, then collapse into the baton. |
+| ![ACT II — think](docs/act2.jpg) | ![ACT III — handoff](docs/act3.jpg) |
+| **ACT II · THINK** — the core ripples while the on-device readout types itself out. | **ACT III · HANDOFF** — the trail draws from phone to desk and the page cools to porcelain. |
 
 ### Scene graph
 
