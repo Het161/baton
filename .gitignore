@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# waitlist log written by /api/waitlist in local dev
+/.data
+
+# macOS AppleDouble sidecars (exFAT volumes)
+._*
+.DS_Store
+
+# dev-mode build output (kept separate from .next on exFAT)
+/.next-dev

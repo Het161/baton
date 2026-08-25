@@ -1,26 +1,581 @@
 @import "tailwindcss";
 
+/* ─────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   Two temperature zones. The page interpolates between them
+   during ACT III — every surface reads from the same runtime
+   variables so the shift is one continuous move, not a swap.
+   ───────────────────────────────────────────────────────────── */
+
+@theme {
+  /* warm zone — phone, pocket, movement */
+  --color-obsidian: #0b0a0a;
+  --color-graphite: #171412;
+  --color-ember: #ff5a1f;
+  --color-amber: #ffb86b;
+
+  /* cool zone — desk, calm, arrival */
+  --color-porcelain: #f4f3ef;
+  --color-ink: #14161a;
+  --color-ice: #9db8c7;
+  --color-ice-deep: #33607a;
+
+  /* shared */
+  --color-bone: #ede9e1;
+
+  --font-display: var(--font-technor), "Clash Display", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* fluid scale */
+  --text-hero: clamp(3.05rem, 8vw, 7.2rem);
+  --text-hero--line-height: 0.9;
+  --text-hero--letter-spacing: -0.035em;
+
+  --text-h2: clamp(1.95rem, 4.1vw, 3.5rem);
+  --text-h2--line-height: 0.96;
+  --text-h2--letter-spacing: -0.028em;
+
+  --text-h3: clamp(1.35rem, 2.6vw, 2.05rem);
+  --text-h3--line-height: 1.06;
+  --text-h3--letter-spacing: -0.02em;
+
+  --text-lead: clamp(1.05rem, 1.55vw, 1.35rem);
+  --text-lead--line-height: 1.5;
+
+  --text-body: clamp(0.975rem, 1.05vw, 1.0625rem);
+  --text-body--line-height: 1.62;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.15em;
+
+  --ease-out-3: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   RUNTIME TEMPERATURE VARIABLES
+   Written by the ACT III ScrollTrigger (lib/temperature.ts).
+   Defaults are the warm zone so the first paint is correct
+   before any JS runs.
+   ───────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --page-bg: 11 10 10;
+  --fg: 237 233 225;
+  --fg-dim: 237 233 225;
+  --fg-dim-a: 0.6;
+  --line: 237 233 225;
+  --line-a: 0.13;
+  --surface: 23 20 18;
+  --surface-a: 0.6;
+  --accent: 255 90 31;
+  --grain-opacity: 1;
+  --scrollbar: 255 90 31;
+
+  /* fractal-noise tile, inlined so there is zero extra network cost */
+  --grain-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    min-width: 0;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: auto;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: rgb(var(--page-bg));
+    color: rgb(var(--fg));
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    /* the temperature move is the one place we want a paint hint */
+    transition: background-color 120ms linear;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: rgb(var(--accent));
+    color: #0b0a0a;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* keyboard-only skip link */
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 200;
+    transform: translateY(-200%);
+    background: rgb(var(--accent));
+    color: #0b0a0a;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.6rem 0.9rem;
+    border-radius: 4px;
+    transition: transform 180ms var(--ease-out-3);
+  }
+  .skip-link:focus-visible {
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ─────────────────────────────────────────────────────────────
+   UTILITIES
+   ───────────────────────────────────────────────────────────── */
+
+@utility shell {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 4rem);
+}
+
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgb(var(--fg-dim) / var(--fg-dim-a));
+}
+
+@utility text-dim {
+  color: rgb(var(--fg-dim) / var(--fg-dim-a));
+}
+
+@utility hairline {
+  border-color: rgb(var(--line) / var(--line-a));
+}
+
+/* Component classes live in the components layer so Tailwind utilities can
+   still override them at call sites — unlayered CSS would win regardless of
+   specificity. */
+@layer components {
+  /* the animated film grain — dark zone only, faded out by temperature */
+  .grain {
+    position: fixed;
+    inset: -50%;
+    z-index: 2;
+    pointer-events: none;
+    opacity: calc(0.032 * var(--grain-opacity));
+    background-image: var(--grain-url);
+    background-size: 180px 180px;
+    will-change: transform;
+    animation: grain-shift 900ms steps(4) infinite;
+    contain: strict;
+  }
+
+  @keyframes grain-shift {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    25% {
+      transform: translate3d(-4%, -3%, 0);
+    }
+    50% {
+      transform: translate3d(3%, -5%, 0);
+    }
+    75% {
+      transform: translate3d(-2%, 4%, 0);
+    }
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* fixed layer that holds the shared WebGL canvas */
+  .stage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    contain: strict;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── the three acts ──
+   Pinned with `position: sticky` rather than ScrollTrigger's pin, so there are
+   no pin-spacers to reflow and the mobile pass is a height change (§7.3). */
+  .act {
+    position: relative;
+    min-height: 270vh;
+  }
+
+  .act-stage {
+    position: sticky;
+    top: 0;
+    display: flex;
+    min-height: 100svh;
+    align-items: center;
+  }
+
+  @media (max-width: 767px) {
+    /* Shorter scrub distance on phones — but not as short as it could be. A
+       sticky stage always unsticks over its own height, so the act must stay
+       comfortably longer than one viewport or the crossfade between acts ends
+       up occupying most of the scroll. */
+    .act {
+      min-height: 210vh;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .act {
+      min-height: 0;
+    }
+    .act-stage {
+      position: relative;
+      min-height: 0;
+      padding-block: clamp(4rem, 10vh, 7rem);
+    }
+  }
+  /* ─────────────────────────────────────────────────────────────
+     8D BUTTON
+     Three stacked layers (plate · body · sheen) that separate on
+     hover, compress on press, and carry a one-shot specular sweep.
+     Magnet + tilt are JS-driven and pointer-fine only.
+     ───────────────────────────────────────────────────────────── */
+
+  .b8d {
+    position: relative;
+    display: inline-flex;
+    isolation: isolate;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+  }
+
+  /* layer 1 — the shadow plate */
+  .b8d-plate {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    transform: translate3d(0, 5px, 0);
+    transition:
+      transform 320ms var(--ease-out-3),
+      opacity 320ms var(--ease-out-3),
+      box-shadow 320ms var(--ease-out-3);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .b8d:hover .b8d-plate {
+    transform: translate3d(0, 8px, 0);
+  }
+
+  .b8d[data-pressed="true"] .b8d-plate {
+    transform: translate3d(0, 1px, 0);
+    opacity: 0.55;
+  }
+
+  /* layer 2 — the body (this is the real button / link) */
+  .b8d-body {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0.85rem 1.5rem;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    text-decoration: none;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transform: perspective(600px) rotateX(0deg) rotateY(0deg);
+    transition:
+      border-color 260ms var(--ease-out-3),
+      box-shadow 260ms var(--ease-out-3),
+      background-color 260ms var(--ease-out-3);
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    will-change: transform;
+  }
+
+  .b8d-body:focus-visible {
+    outline: 2px solid rgb(var(--fg));
+    outline-offset: 4px;
+  }
+
+  /* layer 3 — the face: carries press physics + the sheen */
+  .b8d-face {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: transform 160ms var(--ease-out-3);
+    overflow: hidden;
+  }
+
+  .b8d[data-pressed="true"] .b8d-face {
+    transform: scale(0.97) translateY(2px);
+  }
+
+  .b8d[data-pressed="true"] .b8d-label {
+    transform: scale(0.97) translateY(2px);
+  }
+
+  /* top specular highlight — always present, brightens on hover */
+  .b8d-sheen {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0.75;
+    transition: opacity 260ms var(--ease-out-3);
+  }
+
+  .b8d:hover .b8d-sheen {
+    opacity: 1;
+  }
+
+  /* the one-shot diagonal sweep */
+  .b8d-sweep {
+    position: absolute;
+    top: -60%;
+    bottom: -60%;
+    width: 32%;
+    left: -40%;
+    transform: skewX(-18deg);
+    animation: b8d-sweep 600ms var(--ease-out-3) 1;
+    pointer-events: none;
+  }
+
+  @keyframes b8d-sweep {
+    from {
+      left: -40%;
+      opacity: 0;
+    }
+    25% {
+      opacity: 1;
+    }
+    to {
+      left: 118%;
+      opacity: 0;
+    }
+  }
+
+  .b8d-label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    transition: transform 160ms var(--ease-out-3);
+  }
+
+  .b8d-arrow {
+    display: inline-block;
+    transition: transform 320ms var(--ease-out-3);
+  }
+
+  .b8d:hover .b8d-arrow {
+    transform: translateX(3px);
+  }
+
+  /* ── size ── */
+  .b8d-lg .b8d-body {
+    min-height: 54px;
+    padding: 1.05rem 1.9rem;
+    font-size: 1rem;
+  }
+
+  .b8d-sm .b8d-body {
+    min-height: 44px;
+    padding: 0.6rem 1.05rem;
+    font-size: 0.8125rem;
+  }
+
+  /* ─────────────── VARIANT · EMBER (dark zone) ─────────────── */
+
+  .b8d-ember .b8d-body {
+    background: linear-gradient(180deg, #ff7038 0%, #ff5a1f 45%, #e8480f 100%);
+    color: #150c07;
+    border-color: rgba(255, 208, 176, 0.55);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 233, 214, 0.6),
+      inset 0 -1px 0 rgba(120, 40, 8, 0.45);
+  }
+
+  .b8d-ember .b8d-plate {
+    background: rgba(255, 90, 31, 0.28);
+    box-shadow:
+      0 10px 26px -8px rgba(255, 90, 31, 0.55),
+      0 18px 40px -18px rgba(0, 0, 0, 0.9);
+  }
+
+  .b8d-ember .b8d-sheen {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 52%);
+  }
+
+  .b8d-ember .b8d-sweep {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .b8d-ember .b8d-body:hover {
+    border-color: rgba(255, 233, 214, 0.9);
+  }
+
+  .b8d.b8d-ember[data-pressed="true"] .b8d-body {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 233, 214, 0.35),
+      0 0 0 1px rgba(255, 90, 31, 0.5),
+      0 0 22px rgba(255, 90, 31, 0.45);
+  }
+
+  /* ─────────────── VARIANT · ICE (cool zone) ─────────────── */
+
+  .b8d-ice .b8d-body {
+    background: linear-gradient(180deg, #4a7f9b 0%, #35657f 48%, #2a5169 100%);
+    color: #f4f3ef;
+    border-color: rgba(214, 233, 243, 0.5);
+    box-shadow:
+      inset 0 1px 0 rgba(233, 244, 250, 0.45),
+      inset 0 -1px 0 rgba(11, 30, 42, 0.5);
+  }
+
+  .b8d-ice .b8d-plate {
+    background: rgba(53, 101, 127, 0.3);
+    box-shadow:
+      0 10px 26px -10px rgba(53, 101, 127, 0.6),
+      0 18px 38px -20px rgba(20, 22, 26, 0.5);
+  }
+
+  .b8d-ice .b8d-sheen {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 52%);
+  }
+
+  .b8d-ice .b8d-sweep {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.45) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+
+  .b8d-ice .b8d-body:hover {
+    border-color: rgba(240, 250, 255, 0.85);
+  }
+
+  .b8d.b8d-ice[data-pressed="true"] .b8d-body {
+    box-shadow:
+      inset 0 1px 0 rgba(233, 244, 250, 0.3),
+      0 0 0 1px rgba(157, 184, 199, 0.7),
+      0 0 22px rgba(157, 184, 199, 0.5);
+  }
+
+  /* ─────────────── VARIANT · GHOST (secondary, both zones) ─────────────── */
+
+  .b8d-ghost .b8d-body {
+    background: rgb(var(--surface) / calc(var(--surface-a) * 0.35));
+    color: rgb(var(--fg));
+    border-color: rgb(var(--line) / calc(var(--line-a) * 2.6));
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+  }
+
+  .b8d-ghost .b8d-plate {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .b8d-ghost .b8d-sheen {
+    background: linear-gradient(180deg, rgb(var(--fg) / 0.05) 0%, transparent 55%);
+  }
+
+  .b8d-ghost .b8d-sweep {
+    background: none;
+  }
+
+  .b8d-ghost .b8d-body:hover {
+    border-color: rgb(var(--accent) / 0.7);
+    background: rgb(var(--surface) / calc(var(--surface-a) * 0.55));
+  }
+
+  /* ── reduced motion: keep the object, drop the theatre ── */
+  @media (prefers-reduced-motion: reduce) {
+    .b8d-plate,
+    .b8d-face,
+    .b8d-label,
+    .b8d-arrow,
+    .b8d-sheen {
+      transition: none !important;
+    }
+    .b8d-sweep {
+      display: none;
+    }
+    .b8d:hover .b8d-plate {
+      transform: translate3d(0, 5px, 0);
+    }
+  }
+} /* @layer components */
+
+/* ── reduced motion: strip the theatrics, keep the story ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .grain {
+    animation: none;
+  }
+}
+
+/* ── scrollbar, dark and cool zones alike ── */
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar {
+    width: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--page-bg));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--scrollbar) / 0.4);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--scrollbar) / 0.7);
+  }
 }
